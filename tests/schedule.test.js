@@ -113,3 +113,12 @@ test('summarizeCourse 합계', () => {
   assert.equal(s.stops, 3);
   assert.equal(s.driveMin, r.driveMin);
 });
+
+test('운영 종료 이후 방문이면 closed 경고 + 생략 제안', () => {
+  const places = { ...P, a: { ...P.a, info: { closeAt: { value: '18:00', status: 'verified' } } } };
+  const ok = S.computeDay(day1, ctx({ places }));
+  assert.ok(!ok.warnings.some((w) => w.type === 'closed'));
+  const late = S.computeDay(day1, ctx({ places, flight: { arrive: '16:30', depart: '21:00' } }));
+  assert.ok(late.warnings.some((w) => w.type === 'closed' && w.stopId === 's1'));
+  assert.ok(late.suggestions.length > 0);
+});

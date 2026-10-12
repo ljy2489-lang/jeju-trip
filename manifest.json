@@ -1,0 +1,10 @@
+{
+  "name": "우리 가족 제주 여행지도",
+  "short_name": "제주여행",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FBF6EC",
+  "theme_color": "#FBF6EC",
+  "icons": [{ "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -83,6 +83,11 @@
         w.push({ type: 'fixedLate', stopId: r.stop.id, minutes: late, message: `${r.place.name} ${r.stop.fixedAt} 고정 일정에 ${late}분 늦어요` });
       }
     });
+    sim.rows.forEach((r) => {
+      const ca = r.place && r.place.info && r.place.info.closeAt;
+      if (r.stop.kind === 'visit' && ca && ca.status === 'verified' && r.depart > toMin(ca.value))
+        w.push({ type: 'closed', stopId: r.stop.id, message: `${r.place.name} 운영 종료(${ca.value}) 이후까지 일정이 잡혀 있어요` });
+    });
     if (day.deadline && day.deadline.type === 'flightDepart') {
       const limit = toMin(ctx.flight.depart) + day.deadline.offset;
       if (sim.endMin > limit) w.push({ type: 'deadline', minutes: sim.endMin - limit,
