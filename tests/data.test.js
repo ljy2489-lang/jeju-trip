@@ -42,3 +42,15 @@ test('전체 코스가 추천 코스보다 장소가 많음', () => {
   const n = (c) => c.days.reduce((a, d) => a + d.stops.length, 0);
   assert.ok(n(COURSES.full) > n(COURSES.recommended));
 });
+
+require('../data/routes.js');
+test('두 코스의 모든 인접 구간에 도로 경로', () => {
+  const S = require('../schedule.js');
+  const { ROUTES } = global.window;
+  for (const c of Object.values(COURSES)) for (const d of c.days) for (let i = 0; i < d.stops.length - 1; i++) {
+    const a = PLACES[d.stops[i].placeId], b = PLACES[d.stops[i + 1].placeId];
+    const t = S.travel(a, b, ROUTES);
+    assert.notEqual(t.kind, 'straight', `${a.id}>${b.id}`);
+  }
+  for (const r of Object.values(ROUTES)) { assert.ok(r.coords.length >= 2); assert.ok(r.minutes > 0); }
+});
