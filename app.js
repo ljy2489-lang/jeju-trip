@@ -40,6 +40,14 @@
   };
 
   /* ---------- 지도 ---------- */
+  const HAS_MAP = typeof window.L !== 'undefined';
+  if (!HAS_MAP) {
+    document.getElementById('map').innerHTML = '<div style="padding:24px;text-align:center;color:#6B7774">🗺️ 지도를 불러오지 못했어요.<br>인터넷 연결 후 새로고침해 주세요.<br>일정과 카카오맵 길찾기는 아래에서 그대로 쓸 수 있어요.</div>';
+    window.L = { map: () => ({ setView() { return this; }, fitBounds() {}, flyTo() {}, getZoom: () => 10, invalidateSize() {} }),
+      tileLayer: () => ({ addTo() {} }), layerGroup: () => ({ addTo() { return this; }, clearLayers() {} }),
+      polyline: () => ({ addTo() {} }), marker: () => ({ addTo() { return this; }, on() { return this; }, setIcon() {}, setZIndexOffset() {}, remove() {} }),
+      divIcon: () => ({}), latLngBounds: () => null };
+  }
   const map = L.map('map', { zoomControl: false, attributionControl: true, tap: false, zoomSnap: 0.25, zoomDelta: 0.5 }).setView([33.38, 126.55], 10);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자',
@@ -218,7 +226,7 @@
     const menu = p.menu ? `<h3 style="margin:16px 0 4px">🍽️ 메뉴</h3>
       <div class="menu-tabs" role="tablist"><button type="button" aria-selected="true" data-mt="adult">어른 추천</button><button type="button" aria-selected="false" data-mt="baby8m">8개월</button><button type="button" aria-selected="false" data-mt="toddler16m">16개월</button></div>
       <div class="menu-body" id="menu-body">${p.menu.adult.map(esc).join('<br>')}</div>
-      <div class="st ${p.menu.status === 'verified' ? 'ok' : 'chk'}" style="margin-top:4px">${p.menu.status === 'verified' ? '✅ 메뉴·가격 카카오맵 기준' : '⚠️ 메뉴 확인 필요'}${p.menu.source ? ` · <a href="${esc(p.menu.source)}" target="_blank" rel="noopener">출처</a>` : ''}</div>
+      <div class="st ${p.menu.status === 'verified' ? 'ok' : 'chk'}" id="menu-note" style="margin-top:4px" data-adult-note="${esc((p.menu.status === 'verified' ? '✅ 메뉴·가격 카카오맵 기준' : '⚠️ 메뉴 확인 필요'))}">${p.menu.status === 'verified' ? '✅ 메뉴·가격 카카오맵 기준' : '⚠️ 메뉴 확인 필요'}</div>
       ${p.alt ? `<div class="tipbox">대안 식당: <b>${esc(PLACES[p.alt].name)}</b> · <a href="${kakaoLink(PLACES[p.alt])}" target="_blank" rel="noopener">길찾기</a> · <button class="chip small" type="button" data-alt="${p.alt}">정보 보기</button></div>` : ''}` : '';
     detailEl.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-label="${esc(p.name)}">
       <div class="grip"></div>
@@ -242,7 +250,7 @@
       <div class="close-row"><button class="chip small" type="button" data-close>닫기 ✕</button></div>
       <div class="detail-head"><div class="sticker">${sticker(p.sticker)}</div><h2>${esc(p.name)}</h2></div>
       ${Object.entries({ address: '주소', hours: '운영시간', lastOrder: '마지막 주문', parking: '주차', kids: '아이 정보' }).map(([k, l]) => infoRow(l, p.info[k])).join('')}
-      ${p.menu ? `<div class="menu-body" style="margin-top:10px"><b>어른</b> ${p.menu.adult.map(esc).join(', ')}<br><b>16개월</b> ${esc(p.menu.toddler16m)}</div>` : ''}
+      ${p.menu ? `<div class="menu-body" style="margin-top:10px"><b>어른</b> ${p.menu.adult.map(esc).join(', ')} <span class="st ${p.menu.status === 'verified' ? 'ok' : 'chk'}">${p.menu.status === 'verified' ? '✅ 카카오맵 기준' : '⚠️ 확인 필요'}</span><br><b>16개월</b> ${esc(p.menu.toddler16m)} <span class="st chk">💡 일반 안내</span></div>` : ''}
       <div class="actions" style="margin-top:14px"><a class="btn kakao" href="${kakaoLink(p)}" target="_blank" rel="noopener">카카오맵 길찾기</a></div></div>`;
     detailEl.hidden = false;
     detailEl._place = p;
@@ -256,6 +264,12 @@
       detailEl.querySelectorAll('[data-mt]').forEach((b) => b.setAttribute('aria-selected', String(b === mt)));
       const v = detailEl._place.menu[mt.dataset.mt];
       detailEl.querySelector('#menu-body').innerHTML = Array.isArray(v) ? v.map(esc).join('<br>') : esc(v);
+      const note = detailEl.querySelector('#menu-note');
+      if (note) {
+        const adult = mt.dataset.mt === 'adult';
+        note.className = 'st ' + (adult && detailEl._place.menu.status === 'verified' ? 'ok' : 'chk');
+        note.textContent = adult ? note.dataset.adultNote : '💡 월령 기준 일반 안내예요(식당 확인 아님). 아이가 먹어본 음식 위주로';
+      }
     }
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') detailEl.hidden = true; });

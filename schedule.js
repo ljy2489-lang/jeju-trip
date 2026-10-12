@@ -5,7 +5,9 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   const toMin = (s) => { const [h, m] = String(s).split(':').map(Number); return h * 60 + m; };
   const pad = (n) => String(n).padStart(2, '0');
-  const fmt = (m) => `${pad(Math.floor(m / 60))}:${pad(Math.round(m % 60))}`;
+  const hhmm = (m) => `${pad(Math.floor(m / 60))}:${pad(Math.round(m % 60))}`;
+  // 자정을 넘기거나 전날로 가면 '다음날/전날'을 붙여 24:52 같은 표기를 피한다
+  const fmt = (m) => (m >= 1440 ? `다음날 ${hhmm(m - 1440)}` : m < 0 ? `전날 ${hhmm(m + 1440)}` : hhmm(m));
 
   function haversineKm(a, b) {
     const R = 6371, d = (x) => (x * Math.PI) / 180;
@@ -65,11 +67,17 @@
       }
       let start = arrive, wait = 0;
       if (stop.fixedAt) { const f = toMin(stop.fixedAt); if (f > arrive) { wait = f - arrive; start = f; } }
+      let inBreak = false;
+      const bt = place && place.info && place.info.breakTime;
+      if (stop.kind === 'meal' && bt && bt.status === 'verified') {
+        const [bs, be] = String(bt.value).split('~').map((x) => toMin(x.trim()));
+        if (start >= bs && start < be) { wait += be - start; start = be; inBreak = true; }
+      }
       const depart = start + (stop.stay || 0);
       const next = stops[i + 1];
       const toNext = next ? travel(place, places[next.placeId], routes) : null;
       if (toNext) drive += toNext.minutes;
-      rows.push({ stop, place, arrive, start, depart, wait, toNext });
+      rows.push({ stop, place, arrive, start, depart, wait, toNext, inBreak });
     });
     return { rows, drive, endMin: rows.length ? rows[rows.length - 1].arrive : startMin };
   }
@@ -113,6 +121,10 @@
       run += (r.depart - r.start) + (i > 0 && sim.rows[i - 1].toNext ? sim.rows[i - 1].toNext.minutes : 0);
       if (run > 180) { warnings.push({ type: 'noRest', stopId: r.stop.id, message: `${r.place.name}까지 3시간 넘게 쉬지 않아요. 수유·휴식을 넣어주세요` }); run = 0; }
     });
+    sim.rows.forEach((r) => {
+      if (r.inBreak) warnings.push({ type: 'breakTime', stopId: r.stop.id,
+        message: `${r.place.name} 브레이크타임(${r.place.info.breakTime.value})이라 ${fmt(r.start)} 재오픈까지 기다려요` });
+    });
     const sunsetText = ctx.sunset || '17:50';
     const sunset = toMin(sunsetText);
     sim.rows.forEach((r) => {
@@ -122,14 +134,18 @@
         warnings.push({ type: 'lastOrder', stopId: r.stop.id, message: `${r.place.name} 마지막 주문(${lo.value}) 이후 도착이에요` });
     });
 
-    // 시간 제약을 어겼을 때만 생략 가능 일정을 절감 시간 순으로 제안
+    // 시간 제약을 어겼을 때 생략 가능 일정과, 운영시간 밖이 된 일정 자체를 절감 시간 순으로 제안
+    const culprits = new Set(warnings.filter((w) => w.type === 'closed' || w.type === 'lastOrder').map((w) => w.stopId));
     const suggestions = [];
-    if (hard) {
+    if (hard || culprits.size) {
       stops.forEach((s) => {
-        if (!s.optional) return;
+        if (s.locked || !(s.optional || culprits.has(s.id))) return;
         const alt = simulate(stops.filter((x) => x.id !== s.id), ctx, startMin);
         const saves = sim.endMin - alt.endMin;
-        if (saves > 0) suggestions.push({ stopId: s.id, saves, message: `${ctx.places[s.placeId].name} 생략 시 ${saves}분 절약` });
+        const name = s.label || ctx.places[s.placeId].name;
+        if (culprits.has(s.id)) suggestions.push({ stopId: s.id, saves: Math.max(saves, 0),
+          message: `${name}: 운영시간 밖이에요. ✏️ 편집에서 앞으로 옮기거나 제외해 주세요` });
+        else if (saves > 0) suggestions.push({ stopId: s.id, saves, message: `${name} 생략 시 ${saves}분 절약` });
       });
       suggestions.sort((a, b) => b.saves - a.saves);
     }

@@ -26,7 +26,8 @@ const day1 = {
 test('toMin/fmt 왕복', () => {
   assert.equal(S.toMin('08:05'), 485);
   assert.equal(S.fmt(485), '08:05');
-  assert.equal(S.fmt(24*60+10), '24:10');
+  assert.equal(S.fmt(24*60+10), '다음날 00:10');
+  assert.equal(S.fmt(-30), '전날 23:30');
 });
 
 test('travel: 저장된 경로는 양방향 조회, 없으면 직선 추정', () => {
@@ -61,8 +62,8 @@ test('고정 일정: 일찍 도착하면 대기, 늦으면 fixedLate', () => {
 test('Review1: 늦은 도착 → softEnd 경고 + optional 생략 제안', () => {
   const r = S.computeDay(day1, ctx({ flight:{ arrive:'18:30', depart:'21:00' } }));
   assert.ok(r.warnings.some(w => w.type==='softEnd'));
-  assert.equal(r.suggestions[0].stopId, 's2');
-  assert.ok(r.suggestions[0].saves >= 30);
+  const s2 = r.suggestions.find((s) => s.stopId === 's2');
+  assert.ok(s2 && s2.saves >= 30);
   r.rows.forEach(x => assert.ok(x.arrive >= 0 && x.depart >= x.arrive));
 });
 
@@ -121,4 +122,20 @@ test('운영 종료 이후 방문이면 closed 경고 + 생략 제안', () => {
   const late = S.computeDay(day1, ctx({ places, flight: { arrive: '16:30', depart: '21:00' } }));
   assert.ok(late.warnings.some((w) => w.type === 'closed' && w.stopId === 's1'));
   assert.ok(late.suggestions.length > 0);
+});
+
+test('브레이크타임에 도착하면 재오픈까지 대기 + breakTime 경고', () => {
+  const places = { ...P, c: { ...P.c, info: { breakTime: { value: '15:00~17:00', status: 'verified' } } } };
+  const r = S.computeDay(day1, ctx({ places, flight: { arrive: '09:45', depart: '21:00' } }));
+  const row = r.rows.find((x) => x.stop.id === 's3');
+  assert.ok(row.arrive >= S.toMin('15:00') && row.arrive < S.toMin('17:00'), `도착 ${S.fmt(row.arrive)}`);
+  assert.equal(S.fmt(row.start), '17:00');
+  assert.ok(r.warnings.some((w) => w.type === 'breakTime' && w.stopId === 's3'));
+});
+
+test('운영시간 위반을 일으킨 일정 자체도 조정 제안에 포함', () => {
+  const places = { ...P, a: { ...P.a, info: { closeAt: { value: '18:00', status: 'verified' } } } };
+  const r = S.computeDay(day1, ctx({ places, flight: { arrive: '14:30', depart: '21:00' } }));
+  assert.ok(r.warnings.some((w) => w.type === 'closed' && w.stopId === 's1'));
+  assert.ok(r.suggestions.some((s) => s.stopId === 's1'), JSON.stringify(r.suggestions));
 });
