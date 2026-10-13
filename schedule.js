@@ -66,7 +66,8 @@
         arrive = rows[i - 1].depart + (tr ? tr.minutes : 0);
       }
       let start = arrive, wait = 0;
-      if (stop.fixedAt) { const f = toMin(stop.fixedAt); if (f > arrive) { wait = f - arrive; start = f; } }
+      const anchor = stop.fixedAt || stop.targetAt;
+      if (anchor) { const f = toMin(anchor); if (f > arrive) { wait = f - arrive; start = f; } }
       let inBreak = false;
       const bt = place && place.info && place.info.breakTime;
       if (stop.kind === 'meal' && bt && bt.status === 'verified') {
@@ -86,6 +87,11 @@
   function violations(day, ctx, sim) {
     const w = [];
     sim.rows.forEach((r) => {
+      if (r.stop.latestAt && r.depart > toMin(r.stop.latestAt)) {
+        const late = r.depart - toMin(r.stop.latestAt);
+        w.push({ type: 'latestEnd', stopId: r.stop.id, minutes: late,
+          message: `${r.stop.label || r.place.name} 완료가 마감(${r.stop.latestAt})보다 ${late}분 늦어요` });
+      }
       if (r.stop.fixedAt && r.arrive > toMin(r.stop.fixedAt)) {
         const late = r.arrive - toMin(r.stop.fixedAt);
         w.push({ type: 'fixedLate', stopId: r.stop.id, minutes: late, message: `${r.place.name} ${r.stop.fixedAt} 고정 일정에 ${late}분 늦어요` });

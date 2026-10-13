@@ -21,6 +21,17 @@
   const flightNow = () => savedFlight() || TRIP.flightDefault;
   const ovKey = (course, dayId) => `ov:${course}:${dayId}`;
 
+  // 확정 항공편과 첫날 순서를 한 번 갱신. 이후 사용자가 편집한 값은 유지한다.
+  if (Store.get('tripRevision', null) !== TRIP.revision) {
+    if (savedFlight()) Store.set('flight', { ...TRIP.flightDefault });
+    for (const course of Object.keys(COURSES)) {
+      const key = ovKey(course, 'd1');
+      const ov = Store.get(key, null);
+      if (ov && ov.order) { const { order, ...rest } = ov; Store.set(key, rest); }
+    }
+    Store.set('tripRevision', TRIP.revision);
+  }
+
   function computeCourse(course) {
     return COURSES[course].days.map((d) => Schedule.computeDay(d, {
       places: PLACES, routes: ROUTES, flight: flightNow(), override: Store.get(ovKey(course, d.id), null), sunset: TRIP.sunset[d.id],
@@ -141,12 +152,16 @@
   function cardHTML(r, row, n) {
     const s = row.stop, p = row.place;
     const ws = r.warnings.filter((w) => w.stopId === s.id);
-    const timeTxt = row.wait ? `${F(row.start)} <small>(도착 ${F(row.arrive)} · 대기 ${row.wait}분)</small>`
+    const timeTxt = row.wait && s.targetAt && !row.inBreak
+      ? `${F(row.start)}${s.stay ? ` <small>~ ${F(row.depart)}</small>` : ''} <small>(그 전 여유 ${row.wait}분)</small>`
+      : row.wait ? `${F(row.start)} <small>(도착 ${F(row.arrive)} · 대기 ${row.wait}분)</small>`
       : `${F(row.start)}${s.stay ? ` <small>~ ${F(row.depart)}</small>` : ''}`;
     const badges = [
       `<span class="badge">${KIND[s.kind]}</span>`,
       s.stay ? `<span class="badge">${s.stay}분</span>` : '',
       s.fixedAt ? `<span class="badge fixed">⭐ ${s.fixedAt} 고정</span>` : '',
+      s.targetAt ? `<span class="badge">${s.targetAt} 목표</span>` : '',
+      s.latestAt ? `<span class="badge fixed">${s.latestAt}까지 완료</span>` : '',
       s.optional ? '<span class="badge opt">생략 가능</span>' : '',
     ].join('');
     const t = row.toNext;
@@ -191,7 +206,7 @@
     const cell = (v, col) => `<td class="${col === curCol ? 'cur' : ''}">${v}</td>`;
     const f = savedFlight();
     const checks = TRIP.checklist.map((c) => `<label class="check-row"><input type="checkbox" data-check="${c.id}" ${Store.get('check:' + c.id, false) ? 'checked' : ''}><span>${esc(c.text)}</span></label>`).join('');
-    return `<div class="tipbox">${f ? `✈️ 항공: 금 ${f.arrive} 도착 · 일 ${f.depart} 출발` : `✈️ 항공시간 미입력 → <b>금 ${TRIP.flightDefault.arrive} 도착 / 일 ${TRIP.flightDefault.depart} 출발로 가정</b>했어요. 위 ✈️ 버튼에서 바꿀 수 있어요.`}</div>
+    return `<div class="tipbox">✈️ 금 <b>${(f || TRIP.flightDefault).arrive} 도착</b> · 일 <b>${(f || TRIP.flightDefault).depart} 출발</b><br>🚗 일요일 차량 반납은 <b>20:00까지 완료</b><br>💤 첫날은 15시 입실 후 객실 낮잠 · 섭지코지는 시간 남으면</div>
       <div class="panel-card"><h3>📅 날짜별 보기</h3><div class="day-pick">${results.map((r) => `<button type="button" data-tab="${r.day.id}" style="border-color:${r.day.color}"><b style="color:${r.day.color}">${esc(r.day.tab)}</b>${r.rows.length}곳 · 운전 ${r.driveMin}분</button>`).join('')}</div></div>
       <div class="panel-card"><h3>🧭 코스 비교</h3>
         <table class="cmp"><tr><th></th><th>🧸 추천</th><th>🗺️ 전체 방문</th></tr>
@@ -354,8 +369,8 @@
       <h3>✈️ 항공시간</h3>
       <label class="info-row"><b>금 10/16<br>도착</b><input type="time" name="arrive" value="${f.arrive}" required></label>
       <label class="info-row"><b>일 10/18<br>출발</b><input type="time" name="depart" value="${f.depart}" required></label>
-      <p class="day-meta">금요일은 도착 후 75분(짐·렌터카·카시트) 뒤 출발, 일요일은 출발 2시간 전 터미널 도착 기준으로 다시 계산해요.</p>
-      <div class="actions"><button class="btn" value="save">저장</button><button class="btn ghost" value="reset" formnovalidate>가정값(11:00/21:00)</button><button class="btn ghost" value="cancel" formnovalidate>취소</button></div>
+      <p class="day-meta">금요일은 도착 후 75분(짐·렌터카·카시트) 뒤 출발해요. 일요일은 차량 반납 20:00 마감, 터미널은 출발 45분 전 도착을 계획상 목표로 계산해요. 실제 항공사 수속 마감과 셔틀시간은 예약 안내로 확인해 주세요.</p>
+      <div class="actions"><button class="btn" value="save">저장</button><button class="btn ghost" value="reset" formnovalidate>확정 시간(${TRIP.flightDefault.arrive}/${TRIP.flightDefault.depart})</button><button class="btn ghost" value="cancel" formnovalidate>취소</button></div>
     </form>`;
     dlg.returnValue = '';
     dlg.showModal();
@@ -375,7 +390,7 @@
     document.querySelector('.tabs').innerHTML = tabs.map(([id, t, c]) =>
       `<button role="tab" type="button" aria-selected="${state.tab === id}" data-tab="${id}">${c ? `<span class="dot" style="background:${c}"></span>` : '🗺️ '}${t}</button>`).join('');
     const f = savedFlight();
-    document.getElementById('btn-flight').textContent = f ? `✈️ ${f.arrive} 도착 · ${f.depart} 출발` : `✈️ ${TRIP.flightDefault.arrive}·${TRIP.flightDefault.depart} (가정)`;
+    document.getElementById('btn-flight').textContent = `✈️ ${(f || TRIP.flightDefault).arrive} 도착 · ${(f || TRIP.flightDefault).depart} 출발`;
     document.getElementById('btn-course').textContent = state.course === 'recommended' ? '🧸 추천 코스' : '🗺️ 전체 방문 코스';
     const be = document.getElementById('btn-edit');
     be.textContent = state.editing ? '✅ 편집 완료' : '✏️ 일정 편집';

@@ -59,6 +59,24 @@ test('고정 일정: 일찍 도착하면 대기, 늦으면 fixedLate', () => {
   assert.ok(late.warnings.some(w => w.type==='fixedLate' && w.stopId==='s3'));
 });
 
+test('식사 목표 시각: 일찍 도착하면 기다리고 늦어도 고정 일정 지각으로 보지 않음', () => {
+  const d = { ...day1, stops: day1.stops.map(s => s.id === 's3' ? { ...s, targetAt: '18:00' } : s) };
+  const early = S.computeDay(d, ctx());
+  assert.equal(S.fmt(early.rows.find(x => x.stop.id === 's3').start), '18:00');
+  const late = S.computeDay(d, ctx({ flight: { arrive: '15:30', depart: '21:00' } }));
+  assert.ok(!late.warnings.some(w => w.type === 'fixedLate' && w.stopId === 's3'));
+});
+
+test('차량 반납 마감은 도착뿐 아니라 수속 완료 시간까지 검사', () => {
+  const d = { id: 'return', start: { type: 'time', at: '19:50' }, stops: [
+    { id: 'return-car', placeId: 'air', kind: 'transfer', stay: 20, latestAt: '20:00' },
+  ] };
+  const late = S.computeDay(d, ctx());
+  assert.ok(late.warnings.some(w => w.type === 'latestEnd' && w.stopId === 'return-car' && w.minutes === 10));
+  const onTime = S.computeDay({ ...d, start: { type: 'time', at: '19:40' } }, ctx());
+  assert.ok(!onTime.warnings.some(w => w.type === 'latestEnd'));
+});
+
 test('Review1: 늦은 도착 → softEnd 경고 + optional 생략 제안', () => {
   const r = S.computeDay(day1, ctx({ flight:{ arrive:'18:30', depart:'21:00' } }));
   assert.ok(r.warnings.some(w => w.type==='softEnd'));

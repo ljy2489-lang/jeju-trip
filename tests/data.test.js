@@ -35,8 +35,8 @@ test('추천 코스 고정 일정과 기준', () => {
   const d2 = COURSES.recommended.days[1];
   assert.ok(d2.stops.some((s) => s.fixedAt === '15:00'));
   assert.ok(d2.stops.some((s) => s.fixedAt === '15:30'));
-  assert.deepEqual(TRIP.flightDefault, { arrive: '11:00', depart: '21:00' });
-  assert.equal(COURSES.recommended.days[2].deadline.offset, -120);
+  assert.deepEqual(TRIP.flightDefault, { arrive: '08:10', depart: '21:00' });
+  assert.equal(COURSES.recommended.days[2].deadline.offset, -45);
 });
 test('전체 코스가 추천 코스보다 장소가 많음', () => {
   const n = (c) => c.days.reduce((a, d) => a + d.stops.length, 0);
