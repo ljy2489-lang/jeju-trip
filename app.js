@@ -400,7 +400,6 @@
     if (state.selected) setActiveMarker(state.selected);
   }
 
-  document.querySelector('.deco').innerHTML = ['dolhareubang', 'tangerine', 'haenyeo'].map(sticker).join('');
   const syncTop = () => { document.documentElement.style.setProperty('--top-h', document.querySelector('.top').offsetHeight + 'px'); map.invalidateSize(); };
   window.addEventListener('resize', syncTop);
   syncTop();

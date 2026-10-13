@@ -1,8 +1,8 @@
 // 오프라인 대비: 앱 파일·지도 타일 모두 네트워크 우선, 실패하면 캐시
-const APP = 'jeju-app-v4';
+const APP = 'jeju-app-v5';
 const TILES = 'jeju-tiles-v1';
 const FILES = ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css', './', 'index.html', 'styles.css', 'app.js', 'schedule.js', 'storage.js', 'data/places.js', 'data/itinerary.js',
-  'data/routes.js', 'assets/stickers.js', 'assets/icon.svg', 'manifest.json'];
+  'data/routes.js', 'assets/stickers.js', 'assets/icon.svg', 'assets/jeju-family-hero.png', 'manifest.json'];
 
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(APP).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', (e) => e.waitUntil(

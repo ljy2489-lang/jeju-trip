@@ -15,10 +15,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .top { position: relative; z-index: 1000; padding: calc(env(safe-area-inset-top) + 10px) 16px 8px; background: var(--ivory);
   background-image: radial-gradient(circle at 92% -20%, #FFE2BF 0, transparent 55%), radial-gradient(circle at 0 120%, #D8F1F1 0, transparent 45%); border-bottom: 1px solid var(--line); }
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.title-row > div:first-child { min-width: 0; flex: 1; }
 .title-row h1 { margin: 0; font-size: 22px; line-height: 1.2; }
 .dates { font-size: 13px; color: var(--muted); }
-.deco { display: flex; gap: 2px; flex-shrink: 0; }
-.deco svg { width: 30px; height: 30px; }
+.deco { width: clamp(120px, 34vw, 160px); flex-shrink: 0; }
+.deco img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: contain; }
 .tabs { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0 6px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar, .tools::-webkit-scrollbar { display: none; }
 .tabs button { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--paper); white-space: nowrap; font-size: 15px; }
