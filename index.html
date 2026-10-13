@@ -19,7 +19,12 @@
 </head>
 <body>
   <header class="top">
-    <div class="title-row">
+    <div class="view-controls">
+      <span class="compact-title">🍊 제주여행</span>
+      <button id="btn-top-toggle" class="view-toggle" type="button" aria-expanded="true" aria-controls="trip-title trip-tools">상단 접기 ▴</button>
+      <button id="btn-map-toggle" class="view-toggle" type="button" aria-expanded="true" aria-controls="map-region">지도 접기 ▴</button>
+    </div>
+    <div id="trip-title" class="title-row">
       <div>
         <h1>우리 가족 제주 여행지도</h1>
         <div class="dates">10.16 금 – 10.18 일 · 성인 4 + 아기 2</div>
@@ -27,14 +32,14 @@
       <div class="deco" aria-hidden="true"><img src="assets/jeju-family-hero.png" width="1536" height="1024" alt=""></div>
     </div>
     <nav class="tabs" role="tablist" aria-label="일정 선택"></nav>
-    <div class="tools">
+    <div id="trip-tools" class="tools">
       <button id="btn-flight" class="chip" type="button"></button>
       <button id="btn-course" class="chip" type="button"></button>
       <button id="btn-edit" class="chip" type="button"></button>
     </div>
   </header>
   <main>
-    <div class="map-wrap">
+    <div id="map-region" class="map-wrap">
       <div id="map" aria-label="제주 지도"></div>
       <div class="map-btns">
         <button id="btn-fit" class="round" type="button" aria-label="경로 전체 보기">⤢</button>

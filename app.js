@@ -12,6 +12,8 @@
     course: COURSES[Store.get('course', 'recommended')] ? Store.get('course', 'recommended') : 'recommended',
     selected: null,
     editing: false,
+    topCollapsed: Store.get('view:topCollapsed', true) !== false,
+    mapCollapsed: Store.get('view:mapCollapsed', false) === true,
   };
 
   const savedFlight = () => {
@@ -108,7 +110,7 @@
     });
     fitBounds = pts.length ? L.latLngBounds(pts) : null;
     const key = `${state.tab}|${state.course}`;
-    if (fitBounds && (refit || key !== lastFitKey)) { map.fitBounds(fitBounds, { padding: [22, 22], maxZoom: 13 }); lastFitKey = key; }
+    if (!state.mapCollapsed && fitBounds && (refit || key !== lastFitKey)) { map.fitBounds(fitBounds, { padding: [22, 22], maxZoom: 13 }); lastFitKey = key; }
     const days = state.tab === 'all' ? results : shown;
     document.getElementById('legend').innerHTML = days.map((r) => `<span><i style="background:${r.day.color}"></i>${esc(r.day.tab)}</span>`).join('')
       + (shown.some((r) => r.rows.some((x) => x.toNext && x.toNext.kind === 'straight')) ? '<span>┄ 직선 추정</span>' : '');
@@ -129,7 +131,7 @@
     state.selected = stopId;
     const hit = findRow(compute(), stopId);
     if (!hit) return;
-    if (!fromMap) map.flyTo([hit.row.place.lat, hit.row.place.lng], Math.max(map.getZoom(), 13), { duration: .6 });
+    if (!fromMap && !state.mapCollapsed) map.flyTo([hit.row.place.lat, hit.row.place.lng], Math.max(map.getZoom(), 13), { duration: .6 });
     setActiveMarker(stopId);
     document.querySelectorAll('.card').forEach((c) => c.classList.toggle('active', c.dataset.stop === stopId));
     if (fromMap) {
@@ -386,7 +388,7 @@
 
   function render(opts = {}) {
     const results = compute();
-    const tabs = [['all', '전체 일정', null], ...COURSES[state.course].days.map((d) => [d.id, d.tab, d.color])];
+    const tabs = [['all', '전체', null], ...COURSES[state.course].days.map((d) => [d.id, d.tab, d.color])];
     document.querySelector('.tabs').innerHTML = tabs.map(([id, t, c]) =>
       `<button role="tab" type="button" aria-selected="${state.tab === id}" data-tab="${id}">${c ? `<span class="dot" style="background:${c}"></span>` : '🗺️ '}${t}</button>`).join('');
     const f = savedFlight();
@@ -400,11 +402,42 @@
     if (state.selected) setActiveMarker(state.selected);
   }
 
-  const syncTop = () => { document.documentElement.style.setProperty('--top-h', document.querySelector('.top').offsetHeight + 'px'); map.invalidateSize(); };
-  window.addEventListener('resize', syncTop);
-  syncTop();
+  const syncTop = ({ refit = false } = {}) => {
+    document.documentElement.style.setProperty('--top-h', document.querySelector('.top').offsetHeight + 'px');
+    requestAnimationFrame(() => {
+      if (state.mapCollapsed) return;
+      map.invalidateSize();
+      if (refit && fitBounds) map.fitBounds(fitBounds, { padding: [22, 22], maxZoom: 13, animate: false });
+    });
+  };
+  function syncView() {
+    document.querySelector('.top').classList.toggle('collapsed', state.topCollapsed);
+    document.getElementById('trip-title').hidden = state.topCollapsed;
+    document.getElementById('trip-tools').hidden = state.topCollapsed;
+    document.getElementById('map-region').hidden = state.mapCollapsed;
+    document.body.classList.toggle('map-collapsed', state.mapCollapsed);
+    const topButton = document.getElementById('btn-top-toggle');
+    topButton.textContent = state.topCollapsed ? '상단 펼치기 ▾' : '상단 접기 ▴';
+    topButton.setAttribute('aria-expanded', String(!state.topCollapsed));
+    const mapButton = document.getElementById('btn-map-toggle');
+    mapButton.textContent = state.mapCollapsed ? '지도 보기 ▾' : '지도 접기 ▴';
+    mapButton.setAttribute('aria-expanded', String(!state.mapCollapsed));
+    syncTop({ refit: true });
+  }
+  document.getElementById('btn-top-toggle').onclick = () => {
+    state.topCollapsed = !state.topCollapsed;
+    Store.set('view:topCollapsed', state.topCollapsed);
+    syncView();
+  };
+  document.getElementById('btn-map-toggle').onclick = () => {
+    state.mapCollapsed = !state.mapCollapsed;
+    Store.set('view:mapCollapsed', state.mapCollapsed);
+    syncView();
+  };
+  window.addEventListener('resize', () => syncTop({ refit: true }));
+  syncView();
   render({ refit: true });
   // 글꼴 로딩 후 상단 높이가 바뀌면 지도 크기를 다시 맞춘다
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { syncTop(); if (fitBounds) map.fitBounds(fitBounds, { padding: [22, 22], maxZoom: 13 }); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => syncTop({ refit: true }));
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
