@@ -14,6 +14,27 @@
   const BABY = '평소 먹던 이유식·분유(모유) 지참. 식당 음식은 주지 않기';
 
   window.PLACES = {
+    kimMomguk: {
+      id: 'kimMomguk', name: '김희선제주몸국', type: 'food', lat: 33.5185392, lng: 126.4981208, sticker: 'noodle', photo: null,
+      info: {
+        address: { value: '제주시 어영길 45-6', status: 'verified', source: 'https://m.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020142', checked: '2026-10-13' },
+        hours: { value: '월~토 07:00~15:00 · 일요일 휴무', status: 'verified', source: 'https://m.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020142', checked: '2026-10-13' },
+        kids: chk('냉동 포장 판매·가격·예약·보냉 포장 확인: 064-745-0047. 과거 냉동 포장 후기만 확인, 현재 판매 미확인', 'https://j3r3g321-22.tistory.com/296'),
+      },
+      menu: { adult: ['몸국 · 다음 날 숙소 아침용 냉동 포장(현재 판매 확인 필요)'], baby8m: BABY, toddler16m: '평소 먹던 음식 별도 준비', status: 'check', source: 'https://m.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020142' },
+      links: [{ label: '전화 · 포장 확인', url: 'tel:0647450047' }, { label: '비짓제주', url: 'https://m.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020142' }],
+    },
+    suduri: {
+      id: 'suduri', name: '중문수두리보말칼국수', type: 'food', lat: 33.2515765, lng: 126.4251078, sticker: 'noodle', photo: null,
+      info: {
+        address: { value: '서귀포시 천제연로 192, 1층', status: 'verified', source: 'https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020621', checked: '2026-10-13' },
+        hours: { value: '수~월 08:00~16:00 · 화요일 휴무', status: 'verified', source: 'https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020621', checked: '2026-10-13' },
+        lastOrder: { value: '15:30', status: 'verified', source: 'https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020621', checked: '2026-10-13' },
+        kids: chk('대기·주차·유아의자 확인: 064-739-1070. 음식·남은 음식 포장 불가 안내'),
+      },
+      menu: { adult: ['수두리보말칼국수(톳보말칼국수)'], baby8m: BABY, toddler16m: '평소 먹던 음식 별도 준비', status: 'verified', source: 'https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020621' },
+      links: [{ label: '비짓제주', url: 'https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020621' }],
+    },
     airport: {
       id: 'airport', name: '제주국제공항', type: 'airport', lat: 33.506841, lng: 126.492723, sticker: 'plane', photo: null,
       info: {

@@ -6,6 +6,7 @@
     start: { type: 'flightArrive', offset: 75 }, softEnd: '20:30',
     stops: [
       { id: 'd1-air', placeId: 'airport', kind: 'transfer', stay: 0, locked: true, label: '제주공항 도착 · 렌터카 수령', note: '짐 찾기·렌터카·카시트 2개 확인(도착 후 75분)' },
+      { id: 'd1-momguk', placeId: 'kimMomguk', kind: 'visit', stay: 15, optional: true, label: '김희선제주몸국 · 냉동 포장 수령(확인 필요)', note: '냉동 포장 판매·예약·보냉 포장을 064-745-0047로 사전 확인한 경우 방문. 다음 날 숙소 아침용. 보냉 준비 후 제품 안내에 따라 운반·보관. 불가하면 생략하고 아침 대체식 준비. 15시 입실 우선' },
       { id: 'd1-aqua', placeId: 'aqua', kind: 'visit', stay: 90, label: '아쿠아플라넷 · 수족관만 관람', note: '공연은 보지 않고 수족관만 관람. 아이들 컨디션에 따라 짧게' },
       { id: 'd1-rest', placeId: 'aqua', kind: 'rest', stay: 20, label: '수유·기저귀·휴식', note: '수유실은 입장 후 왼편 휴게실 쪽(확인 필요)' },
       { id: 'd1-seopji', placeId: 'seopji', kind: 'visit', stay: 30, optional: true, outdoor: true, label: '섭지코지 · 시간 남으면 짧게', note: '아쿠아플라넷 바로 옆 구역. 등대 계단은 제외. 15시 숙소 입실을 우선하고 피곤하거나 늦으면 생략' },
@@ -21,10 +22,9 @@
     label: 'DAY 2 · 10/17 토 — 휴애리 → 중문 → 신화월드 수영 ⭐',
     start: { type: 'time', at: '08:00' }, softEnd: '20:30',
     stops: [
-      { id: 'd2-start', placeId: 'dorm', kind: 'stay', stay: 25, locked: true, label: '숙소에서 아침·출발 준비' },
-      { id: 'd2-dangke', placeId: 'dangke', kind: 'meal', stay: 30, optional: true, label: '당케올레국수(선택)', note: '08:30 전후. 줄이 길면 생략' },
+      { id: 'd2-start', placeId: 'dorm', kind: 'stay', stay: 45, locked: true, label: '숙소 아침 · 포장 몸국 + 밥', note: '취사 가능(사용자 확인). 전날 냉동 몸국 구매 시 제품 안내에 따라 데워 먹기. 포장 불가 시 준비한 대체식. 식사·출발 준비 포함' },
       { id: 'd2-hueree', placeId: 'hueree', kind: 'visit', stay: 70, outdoor: true, note: '동물 구경·가을 풍경. 유모차는 포장길 위주' },
-      { id: 'd2-lunch', placeId: 'jungmun', kind: 'meal', stay: 60, note: '전복죽(전복 처음이면 피하기)' },
+      { id: 'd2-lunch', placeId: 'suduri', kind: 'meal', stay: 60, targetAt: '12:00', label: '중문수두리보말칼국수 · 보말칼국수', note: '휴애리에서 신화월드로 가는 길에 점심. 대기는 별도, 15시 체크인·15:30 수영 우선. 남은 음식도 포장 불가 안내' },
       { id: 'd2-nap', placeId: 'somerset', kind: 'rest', stay: 60, label: '짐 보관·수유·낮잠', note: '체크인 전 로비에 짐 맡기고 쉬기' },
       { id: 'd2-checkin', placeId: 'somerset', kind: 'stay', stay: 30, fixedAt: '15:00', label: '서머셋 체크인' },
       { id: 'd2-pool', placeId: 'pool', kind: 'visit', stay: 90, fixedAt: '15:30', label: '탐모라 실내수영장 ⭐', note: '방수기저귀·수영복·수영모·따뜻한 겉옷. 갈아입기·정리 포함' },
@@ -44,7 +44,7 @@
       { id: 'd3-lunch', placeId: 'shinhwafood', kind: 'meal', stay: 60 },
       { id: 'd3-farm', placeId: 'farm', kind: 'visit', stay: 60, optional: true, outdoor: true, note: '송아지 우유주기는 당일 운영 확인' },
       { id: 'd3-cafe', placeId: 'yongdam', kind: 'rest', stay: 50, optional: true, label: '낮잠·휴식(여유 있으면 용담해안도로 카페)' },
-      { id: 'd3-dinner', placeId: 'chakhan', kind: 'meal', stay: 60, targetAt: '18:00', note: '18시 전후 저녁 목표. 그 전 여유시간은 제주시에서 추가 휴식. 17시에 맞출 필요 없이 컨디션에 따라 조정. 대안: 도도리고기국수' },
+      { id: 'd3-dinner', placeId: 'dodori', kind: 'meal', stay: 60, targetAt: '18:00', label: '도도리고기국수 · 고기국수', note: '18시 전후 공항 근처 저녁. 주유·렌터카 반납은 20시까지 완료. 대기시간에 따라 더 일찍 식사' },
       { id: 'd3-fuel', placeId: 'rentcar', kind: 'transfer', stay: 20, label: '주유·렌터카 반납 준비', note: '영업소 근처에서 주유. 실제 업체 주소는 예약 안내로 확인' },
       { id: 'd3-return', placeId: 'rentcar', kind: 'transfer', stay: 20, latestAt: '20:00', locked: true, label: '렌터카 반납 · 20시까지 완료', note: '19:30 전후 반납 목표, 20시 마감. 반납 영업소·마지막 셔틀·항공사 수속 마감은 예약 안내로 확인' },
       { id: 'd3-shuttle', placeId: 'rentcar', kind: 'transfer', stay: 20, label: '공항 셔틀·터미널 이동', note: '셔틀 대기·이동 20분은 계획상 여유값. 실제 소요시간에 따라 더 일찍 반납' },
@@ -55,7 +55,7 @@
   const clone = (x) => JSON.parse(JSON.stringify(x));
   const full1 = clone(d1);
   full1.label = 'DAY 1 · 10/16 금 — [선택] 해일리 → 수족관·섭지코지 → 15시 숙소·낮잠';
-  full1.stops.splice(1, 0, { id: 'd1-haeilri', placeId: 'haeilri', kind: 'visit', stay: 40, optional: true, label: '해일리 카페', note: '15시 입실에 늦으면 생략. 오션뷰·잔디, 영유아 편의시설은 확인 필요' });
+  full1.stops.splice(2, 0, { id: 'd1-haeilri', placeId: 'haeilri', kind: 'visit', stay: 40, optional: true, label: '해일리 카페', note: '15시 입실에 늦으면 생략. 오션뷰·잔디, 영유아 편의시설은 확인 필요' });
 
   window.COURSES = {
     recommended: { name: '추천 코스', days: [d1, d2, d3] },
